@@ -2,10 +2,9 @@ import { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { config } from '../config';
 import User from '../models/user.model';
 
-const client = new OAuth2Client(config.googleClientId);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -53,9 +52,9 @@ export const register = async (req: Request, res: Response) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, email: user.email },
-      config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      { _id: user._id, email: user.email },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1d' }
     );
 
     // Log successful registration
@@ -123,9 +122,9 @@ export const login = async (req: Request, res: Response) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, email: user.email },
-      config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      { _id: user._id, email: user.email },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1d' }
     );
 
     // Log successful login
@@ -156,7 +155,7 @@ export const googleSignIn = async (req: Request, res: Response) => {
     // Verify Google token
     const ticket = await client.verifyIdToken({
       idToken: credential,
-      audience: config.googleClientId
+      audience: process.env.GOOGLE_CLIENT_ID
     });
 
     const payload = ticket.getPayload();
@@ -179,9 +178,9 @@ export const googleSignIn = async (req: Request, res: Response) => {
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, email: user.email },
-      config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      { _id: user._id, email: user.email },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1d' }
     );
 
     res.json({
