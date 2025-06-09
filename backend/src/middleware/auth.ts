@@ -1,42 +1,48 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model';
+import { config } from '../config';
 
 export interface AuthRequest extends Request {
   user?: any;
-  token?: string;
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.header('Authorization');
-    console.log('Auth header:', authHeader);
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new Error('No token provided or invalid token format');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' });
     }
 
     const token = authHeader.replace('Bearer ', '');
     if (!token) {
-      throw new Error('Authentication token missing');
+      return res.status(401).json({ message: 'Authentication token missing' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-    console.log('Decoded token:', decoded);
-
-    const user = await User.findOne({ _id: decoded._id });
-    if (!user) {
-      throw new Error('User not found');
+    try {
+      const decoded = jwt.verify(token, config.jwtSecret) as any;
+      req.user = decoded;
+      next();
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return res.status(401).json({ message: 'Invalid token' });
     }
-
-    // Add user and token to request
-    req.user = user;
-    req.token = token;
-
-    console.log('Authentication successful for user:', user._id);
-    next();
-  } catch (error: any) {
-    console.error('Authentication error:', error.message);
-    res.status(401).json({ error: 'Please authenticate' });
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(401).json({ message: 'Please authenticate' });
   }
+};
+
+export const authorize = (roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Please authenticate' });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Not authorized to access this resource' });
+    }
+
+    next();
+  };
 }; 

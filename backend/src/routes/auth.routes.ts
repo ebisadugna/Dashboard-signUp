@@ -1,17 +1,14 @@
 import express from 'express';
-import { googleSignIn, validateToken, login, register } from '../controllers/auth.controller';
-import { authenticateToken } from '../middleware/auth';
+import { register, login, getUserData } from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = express.Router();
 
-// Google OAuth routes
-router.post('/google', googleSignIn);
-
-// Email/Password routes
+// Public routes
 router.post('/register', register);
 router.post('/login', login);
 
-// Token validation
-router.get('/validate', authenticateToken, validateToken);
+// Protected routes
+router.get('/me', authenticate, getUserData);
 
 export default router; 

@@ -1,0 +1,35 @@
+# Node dependencies
+frontend/node_modules/
+backend/node_modules/
+
+# Logs
+**/logs
+**/*.log
+**/npm-debug.log*
+
+# Runtime data
+**/pids
+**/*.pid
+**/*.seed
+**/*.pid.lock
+
+# Dependency directories
+**/bower_components
+
+# dotenv environment files
+**/.env
+**/.env.*
+
+# Build output
+frontend/build/
+frontend/dist/
+backend/dist/
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.swp
+
+# OS-specific files
+.DS_Store
+Thumbs.db

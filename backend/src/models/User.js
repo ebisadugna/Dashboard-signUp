@@ -1,51 +1,62 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from "mongoose"
+import bcrypt from "bcryptjs"
 
 const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   email: {
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
     trim: true,
-    lowercase: true
   },
   password: {
     type: String,
-    required: true,
-    minlength: 6
+    // Not required because Google users won't have a password
   },
-  name: {
+  uid: {
     type: String,
-    required: true,
-    trim: true
+    unique: true,
+    sparse: true, // Allows null values while maintaining uniqueness for non-null values
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
+    enum: ["user", "admin"],
+    default: "user",
+  },
+  photoURL: {
+    type: String,
   },
   isActive: {
     type: Boolean,
-    default: true
-  }
-}, {
-  timestamps: true
-});
+    default: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+})
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
-  const user = this;
-  if (user.isModified('password')) {
-    user.password = await bcrypt.hash(user.password, 10);
+userSchema.pre("save", async function (next) {
+  
+  if (this.password && this.isModified("password")) {
+    const salt = await bcrypt.genSalt(10)
+    this.password = await bcrypt.hash(this.password, salt)
   }
-  next();
-});
+  next()
+})
 
-// Method to compare password
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
-};
+// Compare password method
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false
+  return await bcrypt.compare(candidatePassword, this.password)
+}
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema)
 
-export default User; 
+export default User
